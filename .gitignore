@@ -1,4 +1,8 @@
 node_modules/
 dist/
-.env*.tsbuildinfo
-backend/tsconfig.build.tsbuildinfo
+coverage/
+.turbo/
+.next/
+.env
+*.tsbuildinfo
+apps/backend/src/generated/
