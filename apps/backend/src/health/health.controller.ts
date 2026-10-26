@@ -9,7 +9,7 @@ export class HealthController {
 
   /** Vérifier que l'API et la base répondent (utilisé par l'hébergeur et la CI) */
   @Get()
-  async check() {
+  async check_little() {
     await this.prisma.$queryRaw`SELECT 1`;
     return { status: "ok" };
   }
