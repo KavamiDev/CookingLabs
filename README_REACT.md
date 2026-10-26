@@ -32,14 +32,15 @@ Une plateforme e-learning gère beaucoup de données qui changent : utilisateur 
 
 React dispose de nombreuses bibliothèques qui répondent directement aux besoins du projet :
 
-| Besoin | Outil possible |
-| --- | --- |
-| Navigation entre les pages | React Router |
-| Appels à l'API / cache des données | TanStack Query, Axios |
-| Formulaires (inscription, quiz) | React Hook Form |
-| Interface et design | Tailwind CSS, MUI |
-| Lecture vidéo | React Player |
-| Tests | Jest, React Testing Library |
+|·Besoin·····························|·Outil·possible··············|
+|·----------------------------------·|·---------------------------·|
+|·Navigation·entre·les·pages·········|·React·Router················|
+|·Appels·à·l'API·/·cache·des·données·|·TanStack·Query,·Axios·······|
+|·Formulaires·(inscription,·quiz)····|·React·Hook·Form·············|
+|·Interface·et·design················|·Tailwind·CSS,·MUI···········|
+|·Lecture·vidéo······················|·React·Player················|
+|·Tests······························|·Jest,·React·Testing·Library·|
+
 
 Il n'est donc pas nécessaire de tout réécrire, et le développement va plus vite.
 
