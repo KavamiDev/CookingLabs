@@ -1,5 +1,7 @@
 {
   "name": "cookinglabs",
+  "version": "0.0.1",
+  "description": "It's an Learning Management System",
   "private": true,
   "packageManager": "pnpm@12.15.0",
   "scripts": {
