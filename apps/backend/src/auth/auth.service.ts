@@ -25,4 +25,16 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
     return { access_token: await this.jwtService.signAsync(payload) };
   }
+
+  /** Utilisateur connecté, relu en base pour avoir des données à jour (nom, rôle...). */
+  async me(userId: number) {
+    const user = await this.usersService.user({ id: userId });
+    // Le token peut encore être valide alors que le compte a été supprimé entre-temps.
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    // On choisit les champs renvoyés : jamais passwordHash ni inviteToken.
+    const { id, email, firstName, lastName, role } = user;
+    return { id, email, firstName, lastName, role };
+  }
 }

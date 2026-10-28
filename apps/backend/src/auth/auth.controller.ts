@@ -1,6 +1,7 @@
-import { Body, Controller, HttpCode, Post, Res } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import type { Response } from "express";
+import { AUTH_COOKIE, type AuthenticatedRequest, AuthGuard } from "./auth.guard.js";
 import { AuthService } from "./auth.service.js";
 import { LoginDto } from "./dto/login.dto.js";
 
@@ -11,13 +12,13 @@ export class AuthController {
 
   @Post("login")
   @HttpCode(200)
-  @Throttle({ default: { limit: 5, ttl: 60_000 } }) // 5 tentatives par minute et par IP
+  @Throttle({ default: { limit: 10, ttl: 60_000 } }) // 5 tentatives par minute et par IP
   async login(@Body() body: LoginDto, @Res({ passthrough: true }) res: Response) {
     // Le service renvoie `access_token` : le nom doit être identique ici (avant : `acces_token` → undefined).
     const { access_token } = await this.authService.login(body.email, body.password);
 
     // httpOnly : le JavaScript du navigateur ne peut pas lire le cookie (protection contre le vol par XSS).
-    res.cookie("access_token", access_token, {
+    res.cookie(AUTH_COOKIE, access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -27,10 +28,18 @@ export class AuthController {
     return { message: "Connecté" };
   }
 
+  // Disconnect user session
   @Post("logout")
   @HttpCode(200)
   logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie("access_token");
+    res.clearCookie(AUTH_COOKIE);
     return { message: "Déconnecté" };
+  }
+
+  // Returns the logged-in user. AuthGuard verified the cookie
+  @Get("me")
+  @UseGuards(AuthGuard)
+  me(@Req() req: AuthenticatedRequest) {
+    return this.authService.me(req.user.sub);
   }
 }
