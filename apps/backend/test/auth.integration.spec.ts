@@ -12,18 +12,18 @@ const EMAIL = "eleve@test.local";
 const PASSWORD = "bonmotdepasse";
 const NOT_ACTIVATED_EMAIL = "invite@test.local";
 
-describe("POST /api/auth/login et /api/auth/logout (base PostgreSQL)", () => {
+describe("POST /api/auth/login, /api/auth/logout and GET /api/auth/me (real PostgreSQL database)", () => {
   let database: StartedPostgreSqlContainer;
   let app: INestApplication;
 
-  // Created an API before each test for throttler
-  // 5 attemps login per minute
+  // A new API is created before each test so the throttler counter
+  // (5 login attempts per minute) starts from zero every time
   async function createApp() {
-    // Import AuthModule that read process.env.JWT_SECRET while loading the file
+    // Dynamic import: AuthModule reads process.env.JWT_SECRET when the file is loaded
     const { AppModule } = await import("../src/app.module.js");
     const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
     const nestApp = module.createNestApplication();
-    // Same config that main.ts
+    // Same config as main.ts
     nestApp.setGlobalPrefix("api");
     nestApp.use(cookieParser());
     nestApp.useGlobalPipes(
@@ -33,14 +33,12 @@ describe("POST /api/auth/login et /api/auth/logout (base PostgreSQL)", () => {
     return nestApp;
   }
 
-  // Send body in json on the login route
+  // Sends a JSON body to the login route
   const login = (body: object) => request(app.getHttpServer()).post("/api/auth/login").send(body);
 
-  // Running 1 time before the test
-  // Running PostgreSQL
-  // Define DATABASE_URL
-  // Create SQL tables with prisma migrate deploy
-  // Create 2 accounts
+  // Runs once before all tests:
+  // starts PostgreSQL, sets DATABASE_URL and JWT_SECRET,
+  // creates the SQL tables with prisma migrate deploy, then creates 2 accounts
   beforeAll(async () => {
     database = await new PostgreSqlContainer("postgres:17").start();
     process.env.DATABASE_URL = database.getConnectionUri();
@@ -66,18 +64,17 @@ describe("POST /api/auth/login et /api/auth/logout (base PostgreSQL)", () => {
     app = await createApp();
   });
 
-  // Close API after each test
+  // Closes the API after each test
   afterEach(async () => {
     await app?.close();
   });
 
-  // Close Database after each test
+  // Stops the database after all tests
   afterAll(async () => {
     await database?.stop();
   });
 
-  // Connect user and upload a cookie httpOnly available 7 days
-  it("connecte l'utilisateur et pose un cookie httpOnly valable 7 jours", async () => {
+  it("logs the user in and sets an httpOnly cookie valid for 7 days", async () => {
     const res = await login({ email: EMAIL, password: PASSWORD }).expect(200, {
       message: "Connecté",
     });
@@ -86,7 +83,7 @@ describe("POST /api/auth/login et /api/auth/logout (base PostgreSQL)", () => {
     expect(cookie).toMatch(/^access_token=/);
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=Lax");
-    expect(cookie).toContain("Max-Age=604800"); // 7 * 24 * 60 * 60 secondes
+    expect(cookie).toContain("Max-Age=604800"); // 7 * 24 * 60 * 60 seconds
 
     const token = cookie.split(";")[0].replace("access_token=", "");
     const payload = await app.get(JwtService).verifyAsync(token);
@@ -94,58 +91,51 @@ describe("POST /api/auth/login et /api/auth/logout (base PostgreSQL)", () => {
     expect(payload.sub).toEqual(expect.any(Number));
   });
 
-  // Reject a bad password
-  it("refuse un mauvais mot de passe", async () => {
+  it("rejects a wrong password", async () => {
     const res = await login({ email: EMAIL, password: "fake_mdp" }).expect(401);
     expect(res.body.message).toBe("Email ou mot de passe incorrect");
     expect(res.get("Set-Cookie")).toBeUndefined();
   });
 
-  // Reject an unknown e-mail
-  it("refuse un e-mail inconnu", async () => {
+  it("rejects an unknown email", async () => {
     const res = await login({ email: "inconnu@test.local", password: PASSWORD }).expect(401);
     expect(res.body.message).toBe("Email ou mot de passe incorrect");
   });
 
-  // Reject an account not yet activated
-  it("refuse un compte pas encore activé (mot de passe hashé vide)", async () => {
+  it("rejects an account not activated yet (no password hash)", async () => {
     await login({ email: NOT_ACTIVATED_EMAIL, password: "nimportequoi" }).expect(401);
   });
 
-  // Reject request body with bad data
-  it("refuse un corp de rêquete mal renseigné", async () => {
+  it("rejects an invalid request body", async () => {
     await login({ email: "pas-un-email", password: PASSWORD }).expect(400);
-    await login({ email: EMAIL }).expect(400); // mot de passe manquant
-    await login({ email: EMAIL, password: PASSWORD, role: "admin" }).expect(400); // champ en trop
+    await login({ email: EMAIL }).expect(400); // missing password
+    await login({ email: EMAIL, password: PASSWORD, role: "admin" }).expect(400); // extra field
   });
 
-  // Bloqued after 5 attemps
-  it("bloque après 5 tentatives de connexion en une minute", async () => {
+  it("blocks after 5 login attempts in one minute", async () => {
     for (let i = 0; i < 5; i++) {
       await login({ email: EMAIL, password: "mauvais" }).expect(401);
     }
-    // 6e attemps: bloqued same with a good password.
+    // 6th attempt: blocked, even with the right password
     await login({ email: EMAIL, password: PASSWORD }).expect(429);
   });
 
-  // Deconnect by clearing cookie
-  it("déconnection en vidant le cookie", async () => {
+  it("logs out by clearing the cookie", async () => {
     const res = await request(app.getHttpServer())
       .post("/api/auth/logout")
       .expect(200, { message: "Déconnecté" });
 
     const cookie = res.get("Set-Cookie")?.[0] ?? "";
-    expect(cookie).toMatch(/^access_token=;/); // valeur vide
-    expect(cookie).toContain("Expires=Thu, 01 Jan 1970"); // date passée
+    expect(cookie).toMatch(/^access_token=;/); // empty value
+    expect(cookie).toContain("Expires=Thu, 01 Jan 1970"); // date in the past
   });
 
-  // GET /me without cookie
-  it("GET /me refuse une requête sans cookie", async () => {
+  it("GET /me rejects a request without cookie", async () => {
     await request(app.getHttpServer()).get("/api/auth/me").expect(401);
   });
 
-  // GET /me with a forged token (not signed with JWT_SECRET)
-  it("GET /me refuse un token falsifié", async () => {
+  // Forged token: not signed with JWT_SECRET
+  it("GET /me rejects a forged token", async () => {
     await request(app.getHttpServer())
       .get("/api/auth/me")
       .set("Cookie", "access_token=faux.token.invente")
@@ -153,7 +143,7 @@ describe("POST /api/auth/login et /api/auth/logout (base PostgreSQL)", () => {
   });
 
   // An agent keeps cookies between requests, like a browser
-  it("GET /me renvoie l'utilisateur connecté, puis 401 après le logout", async () => {
+  it("GET /me returns the logged-in user, then 401 after logout", async () => {
     const browser = request.agent(app.getHttpServer());
     await browser.post("/api/auth/login").send({ email: EMAIL, password: PASSWORD }).expect(200);
 
