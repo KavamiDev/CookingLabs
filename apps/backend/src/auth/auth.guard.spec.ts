@@ -9,7 +9,7 @@ function contextFor(request: Partial<AuthenticatedRequest>) {
   } as unknown as ExecutionContext;
 }
 
-// Test AuthGuard
+// Test AuthGuard with jwt secret and guard
 describe("AuthGuard", () => {
   const jwtService = new JwtService({ secret: "secret-de-test" });
   const guard = new AuthGuard(jwtService);

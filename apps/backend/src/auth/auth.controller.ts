@@ -17,7 +17,7 @@ export class AuthController {
     // Le service renvoie `access_token` : le nom doit être identique ici (avant : `acces_token` → undefined).
     const { access_token } = await this.authService.login(body.email, body.password);
 
-    // httpOnly : le JavaScript du navigateur ne peut pas lire le cookie (protection contre le vol par XSS).
+    // httpOnly : Browser cannot read a cookie
     res.cookie(AUTH_COOKIE, access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
