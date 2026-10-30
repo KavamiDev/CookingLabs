@@ -3,7 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 import * as argon2 from "argon2";
 import { UsersService } from "../users/users.service.js";
 
-// Class authService which define async function login with an sign acces_token
+// Checks credentials and signs the JWT stored in the access_token cookie
 @Injectable()
 export class AuthService {
   constructor(
@@ -14,26 +14,25 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await this.usersService.user({ email });
 
-    // passwordHash est null tant que l'utilisateur n'a pas défini son mot de passe
-    // (compte invité, pas encore activé) : il ne peut donc pas se connecter.
-    // Même message d'erreur dans tous les cas, pour ne pas révéler quels e-mails existent.
+    // No passwordHash = account not activated yet.
+    // Same error in every case so we don't reveal which emails exist.
     if (!user?.passwordHash || !(await argon2.verify(user.passwordHash, password))) {
       throw new UnauthorizedException("Email ou mot de passe incorrect");
     }
 
-    // Le rôle est mis dans le token pour pouvoir protéger plus tard les routes réservées à l'admin.
+    // Role in the token: used later to protect admin routes
     const payload = { sub: user.id, email: user.email, role: user.role };
     return { access_token: await this.jwtService.signAsync(payload) };
   }
 
-  /** Utilisateur connecté, relu en base pour avoir des données à jour (nom, rôle...). */
+  // Reloads the user from the database to return up-to-date data
   async me(userId: number) {
     const user = await this.usersService.user({ id: userId });
-    // Le token peut encore être valide alors que le compte a été supprimé entre-temps.
+    // The token can still be valid after the account was deleted
     if (!user) {
       throw new UnauthorizedException();
     }
-    // On choisit les champs renvoyés : jamais passwordHash ni inviteToken.
+    // Never return passwordHash or inviteToken
     const { id, email, firstName, lastName, role } = user;
     return { id, email, firstName, lastName, role };
   }
