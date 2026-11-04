@@ -4,37 +4,52 @@ on:
   push:
     branches: [main, develop]
   pull_request:
+    branches: [main, develop]
 
 jobs:
-  quality:
-    name: Lint, types, tests, build
-    runs-on: ubuntu-latest
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm exec biome ci .
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - run: pnpm typecheck
+
+  unit:
+    name: Tests unitaires
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - run: pnpm test
-      # Testcontainers lance un vrai PostgreSQL dans Docker
+
+  integration:
+    name: Tests d'intégration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - run: pnpm test:integration
-      - run: pnpm build
 
   e2e:
-    name: Playwright
-    runs-on: ubuntu-latest
+    name: Tests end-to-end (Playwright)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm --filter frontend exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       - uses: actions/upload-artifact@v7
@@ -42,3 +57,14 @@ jobs:
         with:
           name: playwright-report
           path: apps/frontend/playwright-report
+
+  #Le builds ce lance après que tous les tests soient passés
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    needs: [lint, typecheck, unit, integration, e2e]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm build
