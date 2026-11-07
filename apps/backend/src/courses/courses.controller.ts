@@ -1,6 +1,16 @@
-import { Body, Controller, Delete, Get, HttpCode, Patch, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+} from "@nestjs/common";
 import { CoursesService } from "./courses.service.js";
-import { CreateCourseDto } from "./dto/courses-dto.js";
+import { CreateCourseDto, UpdateCourseDto } from "./dto/courses-dto.js";
 
 // Create the process of Get / courses
 @Controller("courses")
@@ -18,13 +28,18 @@ export class CoursesController {
     return this.coursesService.create(createCourseDto);
   }
 
-  @Patch()
-  update(@Body("id") id: number, @Body() updateCourseDto: Partial<CreateCourseDto>) {
+  @Patch(":id")
+  update(@Param("id", ParseIntPipe) id: number, @Body() updateCourseDto: UpdateCourseDto) {
     return this.coursesService.update(id, updateCourseDto);
   }
 
-  @Delete()
-  delete(@Body("id") id: number) {
+  @Get(":id")
+  findOne(@Param("id", ParseIntPipe) id: number) {
+    return this.coursesService.findOne(id);
+  }
+
+  @Delete(":id")
+  delete(@Param("id", ParseIntPipe) id: number) {
     return this.coursesService.delete(id);
   }
 }

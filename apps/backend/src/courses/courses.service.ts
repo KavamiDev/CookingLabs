@@ -1,6 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service.js";
-import { CreateCourseDto } from "./dto/courses-dto.js";
+import { CreateCourseDto, UpdateCourseDto } from "./dto/courses-dto.js";
 
 //Services is to create really what I want my app is able to do
 @Injectable()
@@ -9,6 +9,16 @@ export class CoursesService {
 
   findAll() {
     return this.prisma.course.findMany();
+  }
+
+  async findOne(id: number) {
+    const course = await this.prisma.course.findUnique({
+      where: { id },
+    });
+    if (!course) {
+      throw new NotFoundException("Course not found");
+    }
+    return course;
   }
 
   create(createCourseDto: CreateCourseDto) {
@@ -23,7 +33,7 @@ export class CoursesService {
     });
   }
 
-  update(id: number, updateCourseDto: Partial<CreateCourseDto>) {
+  update(id: number, updateCourseDto: UpdateCourseDto) {
     return this.prisma.course.update({
       where: { id },
       data: updateCourseDto,
