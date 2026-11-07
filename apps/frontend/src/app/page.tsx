@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -8,7 +9,9 @@ export default function Home() {
         La plateforme de formation. Connectez-vous pour retrouver vos cours.
       </p>
       <div>
-        <Button size="lg">Se connecter</Button>
+        <Button size="lg">
+          <Link href="/cours"> Retrouver vos cours </Link>
+        </Button>
       </div>
     </main>
   );
