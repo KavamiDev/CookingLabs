@@ -1,0 +1,13 @@
+# Methodes DRY, don't repreat yourself, pour installer pnpm, Node et les dépendances du monorepo
+name: Setup
+description: Instal pnpm, Node and monorepo dependencies
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v6
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 24
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile
+      shell: bash
