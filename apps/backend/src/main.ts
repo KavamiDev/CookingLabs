@@ -10,6 +10,9 @@ import { PrismaExceptionFilter } from "./prisma/prisma-exception.filter.js";
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Trust 1 proxy
+  app.set("trust proxy", 1);
+
   // add 'api' before each routes
   app.setGlobalPrefix("api");
 
