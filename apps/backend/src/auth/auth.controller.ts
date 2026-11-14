@@ -12,9 +12,9 @@ export class AuthController {
 
   @Post("login")
   @HttpCode(200)
-  @Throttle({ default: { limit: 5, ttl: 60_000 } }) // 5 tentatives par minute et par IP
+  @Throttle({ default: { limit: 10, ttl: 60_000 } }) // 10 tentatives par ip
   async login(@Body() body: LoginDto, @Res({ passthrough: true }) res: Response) {
-    // Le service renvoie `access_token` : le nom doit être identique ici (avant : `acces_token` → undefined).
+    // Return acces token
     const { access_token } = await this.authService.login(body.email, body.password);
 
     // httpOnly : Browser cannot read a cookie
