@@ -37,6 +37,7 @@ pnpm install
 docker compose up -d
 cp apps/backend/.env.example apps/backend/.env
 pnpm --filter backend db:migrate
+pnpm --filter backend db:seed
 pnpm dev
 ```
 
@@ -53,6 +54,7 @@ pnpm dev
 | `pnpm build`                       | Construit les deux applications             |
 | `pnpm --filter backend db:migrate` | Applique les changements de `schema.prisma` |
 | `pnpm --filter backend db:studio`  | Ouvre la base dans le navigateur            |
+| `pnpm --filter backend db:seed `   | Crée le compte de test                      |
 
 Avant chaque commit, Husky lance Biome sur les fichiers modifiés.
 
