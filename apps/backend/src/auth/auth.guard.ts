@@ -3,7 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 import type { Request } from "express";
 import { UserRole } from "../generated/prisma/client.js";
 
-// Cookie holding the JWT (set on login, cleared on logout)
+// Cookie holding the JWT
 export const AUTH_COOKIE = "access_token";
 
 // JWT content

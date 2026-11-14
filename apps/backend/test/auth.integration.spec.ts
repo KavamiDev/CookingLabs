@@ -17,7 +17,6 @@ describe("POST /api/auth/login, /api/auth/logout and GET /api/auth/me (real Post
   let app: INestApplication;
 
   // A new API is created before each test so the throttler counter
-  // (5 login attempts per minute) starts from zero every time
   async function createApp() {
     // Dynamic import: AuthModule reads process.env.JWT_SECRET when the file is loaded
     const { AppModule } = await import("../src/app.module.js");
@@ -112,11 +111,11 @@ describe("POST /api/auth/login, /api/auth/logout and GET /api/auth/me (real Post
     await login({ email: EMAIL, password: PASSWORD, role: "admin" }).expect(400); // extra field
   });
 
-  it("blocks after 5 login attempts in one minute", async () => {
-    for (let i = 0; i < 5; i++) {
+  it("blocks after 10 login attempts in one minute", async () => {
+    for (let i = 0; i < 10; i++) {
       await login({ email: EMAIL, password: "mauvais" }).expect(401);
     }
-    // 6th attempt: blocked, even with the right password
+    // 11th attempt: blocked, even with the right password
     await login({ email: EMAIL, password: PASSWORD }).expect(429);
   });
 
