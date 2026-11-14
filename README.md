@@ -10,7 +10,7 @@ Plateforme e-learning (LMS) pour former les salariés d'une entreprise.
 | Front                       | Next.js (App Router), Tailwind CSS, shadcn/ui                                     |
 | Back                        | NestJS, Swagger sur `/api/docs`                                                   |
 | Base de données             | PostgreSQL + Prisma                                                               |
-| Sécurité                    | Guards NestJS (rôles), `@nestjs/throttler`                                        |
+| Sécurité                    | Guards NestJS (rôles), `@nestjs/throttler`, Security headers NestJS               |
 | Tests                       | Vitest + SWC (unitaires), Testcontainers (intégration), Playwright (bout en bout) |
 | Qualité                     | Biome, Husky + lint-staged, GitHub Actions                                        |
 | Hébergement                 | Vercel (front), Railway ou Fly.io (API + PostgreSQL), Docker                      |

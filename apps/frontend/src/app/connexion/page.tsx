@@ -20,7 +20,7 @@ const ERROR_MESSAGES: Record<number, string> = {
   429: "Trop de tentatives. Réessayez dans une minute.",
 };
 
-// Return the user if code = 200 and if code = 401 we return null
+// Return the user if res.ok and if code = 401 we return null
 async function fetchCurUser() {
   const res = await fetch("/api/auth/me");
   return res.ok ? res.json() : null;

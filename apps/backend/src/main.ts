@@ -10,6 +10,9 @@ import { PrismaExceptionFilter } from "./prisma/prisma-exception.filter.js";
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Use Security header with default arguments ( Xframe, Strict-transport, Content-Security etc...)
+  app.useSecurityHeaders();
+
   // Trust 1 proxy
   app.set("trust proxy", 1);
 
