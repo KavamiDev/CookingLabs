@@ -31,7 +31,12 @@ export default function Courses() {
 }
 
 async function CoursesList() {
-  const courses = await fetchCourses();
+  let courses: Course[] = [];
+  try {
+    courses = await fetchCourses();
+  } catch {
+    return <p className="text-red-600">Impossible de charger les cours</p>;
+  }
   return (
     <div>
       {courses.map((course: Course) => (
