@@ -58,4 +58,6 @@ pnpm dev
 
 Avant chaque commit, Husky lance Biome sur les fichiers modifiés.
 
+Convention : le code et les commentaires sont en anglais, les textes affichés à l’utilisateur en français.
+
 L'API se construit en image Docker pour Railway ou Fly.io : `docker build -f apps/backend/Dockerfile .`
