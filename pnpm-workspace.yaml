@@ -6,9 +6,11 @@ allowBuilds:
   "@prisma/engines": true
   prisma: true
   "@swc/core": true
+  argon2: true
   "@scarf/scarf": false
   cpu-features: false
   protobufjs: false
   ssh2: false
   sharp: false
   unrs-resolver: false
+  esbuild: true
