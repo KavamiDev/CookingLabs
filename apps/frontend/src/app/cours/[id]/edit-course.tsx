@@ -1,5 +1,5 @@
 "use client";
-// Formulaire pour renommer un cours + bouton pour le supprimer
+// Form to rename a course + button to delete it
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";

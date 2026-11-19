@@ -12,7 +12,7 @@ export default function CoursePage({ params }: { params: Promise<{ id: string }>
         <CourseDetails params={params} />
       </Suspense>
       <div className="flex justify-center">
-        <Button size="lg">
+        <Button asChild size="lg">
           <Link href="/cours">Retour à la liste des cours</Link>
         </Button>
       </div>

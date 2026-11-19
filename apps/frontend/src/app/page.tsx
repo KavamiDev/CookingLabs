@@ -9,7 +9,7 @@ export default function Home() {
         La plateforme de formation. Connectez-vous pour retrouver vos cours.
       </p>
       <div>
-        <Button size="lg">
+        <Button asChild size="lg">
           <Link href="/cours"> Retrouver vos cours </Link>
         </Button>
       </div>

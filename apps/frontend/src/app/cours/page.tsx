@@ -17,12 +17,13 @@ export default function Courses() {
         <CoursesList />
       </Suspense>
       <div>
-        <Button>
+        <Button asChild>
           <Link href="/cours/creer">Créer un cours</Link>
+          {/* TODO: rename French URLs (/cours, /creer) to English */}
         </Button>
       </div>
       <div className="flex justify-center">
-        <Button size="lg">
+        <Button asChild size="lg">
           <Link href="/">Retour à l'accueil</Link>
         </Button>
       </div>

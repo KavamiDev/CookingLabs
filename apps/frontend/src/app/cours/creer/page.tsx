@@ -1,5 +1,5 @@
 "use client";
-// "use client" car la page a un formulaire : on utilise useState et des clics
+// "use client" because the page has a form: it uses useState and click handlers
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -57,7 +57,7 @@ export default function CreateCoursePage() {
       </form>
 
       <div className="flex justify-center">
-        <Button size="lg">
+        <Button asChild size="lg">
           <Link href="/cours">Retour à la liste des cours</Link>
         </Button>
       </div>

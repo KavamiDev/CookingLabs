@@ -1,5 +1,5 @@
 "use client";
-// Liste des leçons avec des boutons ↑ ↓ pour changer l'ordre
+// List of lessons with ↑ ↓ buttons to change their order
 
 import { useState } from "react";
 import type { Lesson } from "@/app/_service/courses/service";
