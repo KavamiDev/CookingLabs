@@ -23,10 +23,10 @@ export interface Course {
 }
 
 // Same default as next.config.ts: the NestJS API runs on port 3001 in local development.
-const API_URL = process.env.API_URL ?? "http://localhost:3001";
+export const API_URL = process.env.API_URL ?? "http://localhost:3001";
 
 // Logs the API error on the Next server, then throws so the page can show an error state.
-async function throwApiError(response: Response, action: string): Promise<never> {
+export async function throwApiError(response: Response, action: string): Promise<never> {
   const errorBody = await response.text();
   console.error(`API error [${response.status}] on ${response.url}:`, errorBody);
   throw new Error(`Failed to ${action} (${response.status})`);
