@@ -21,13 +21,13 @@ export class CoursesController {
   findAll() {
     return this.coursesService.findAll();
   }
-  //Todo (A001): Get roles admin
+  // TODO (A001): admin role only
   @Post()
   @HttpCode(201)
   create(@Body() createCourseDto: CreateCourseDto) {
     return this.coursesService.create(createCourseDto);
   }
-  //Todo (A001): Get roles admin
+  // TODO (A001): admin role only
   @Patch(":id")
   update(@Param("id", ParseIntPipe) id: number, @Body() updateCourseDto: UpdateCourseDto) {
     return this.coursesService.update(id, updateCourseDto);
@@ -46,7 +46,7 @@ export class CoursesController {
     return this.coursesService.reorderLessons(id, reorderLessonsDto);
   }
 
-  //Todo (A001): Get roles admin
+  // TODO (A001): admin role only
   @Delete(":id")
   delete(@Param("id", ParseIntPipe) id: number) {
     return this.coursesService.delete(id);

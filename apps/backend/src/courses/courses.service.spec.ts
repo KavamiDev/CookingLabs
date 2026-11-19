@@ -6,7 +6,7 @@ import { CoursesService } from "./courses.service.js";
 describe("CoursesService", () => {
   let service: CoursesService;
 
-  // Faux Prisma : on remplace chaque fonction par vi.fn() pour ne pas toucher la vraie base
+  // Fake Prisma: each method is a vi.fn() so the real database is never touched
   const prismaMock = {
     course: {
       findMany: vi.fn(),
@@ -18,7 +18,7 @@ describe("CoursesService", () => {
   };
 
   beforeEach(async () => {
-    // On remet les faux à zéro avant chaque test
+    // Reset the fakes before each test
     vi.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -95,7 +95,7 @@ describe("CoursesService", () => {
       service.reorderLessons(1, { lessons: [{ id: 999, position: 1 }] }),
     ).rejects.toThrow(BadRequestException);
 
-    // Rien ne doit être modifié en base
+    // Nothing must be written to the database
     expect(prismaMock.course.update).not.toHaveBeenCalled();
   });
 });

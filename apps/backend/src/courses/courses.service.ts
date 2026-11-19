@@ -3,7 +3,7 @@ import { PrismaService } from "../prisma/prisma.service.js";
 import { CreateCourseDto, UpdateCourseDto } from "./dto/courses-dto.js";
 import { ReorderLessonsDto } from "./dto/lessons-ids.js";
 
-//Services is to create really what I want my app is able to do
+// Business logic for courses: the controller only receives the request and calls this service
 @Injectable()
 export class CoursesService {
   constructor(private readonly prisma: PrismaService) {}
