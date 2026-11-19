@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
+import { getJwtSecret } from "../config/env.js";
 import { UserModule } from "../users/users.module.js";
 import { AuthController } from "./auth.controller.js";
 import { AuthService } from "./auth.service.js";
@@ -8,11 +9,10 @@ import { AuthService } from "./auth.service.js";
 @Module({
   imports: [
     UserModule,
-    JwtModule.register({
+    // registerAsync: the secret is read when the app starts, and the start fails if it is missing
+    JwtModule.registerAsync({
       global: true,
-      // Clé secrète qui signe les tokens : à définir dans .env (voir .env.example).
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: "7d" },
+      useFactory: () => ({ secret: getJwtSecret(), signOptions: { expiresIn: "7d" } }),
     }),
   ],
   controllers: [AuthController],

@@ -5,6 +5,7 @@ import { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
 import { AppModule } from "./app.module.js";
+import { getTrustProxy } from "./config/env.js";
 import { PrismaExceptionFilter } from "./prisma/prisma-exception.filter.js";
 
 async function bootstrap() {
@@ -13,8 +14,8 @@ async function bootstrap() {
   // Use Security header with default arguments ( Xframe, Strict-transport, Content-Security etc...)
   app.useSecurityHeaders();
 
-  // Trust 1 proxy
-  app.set("trust proxy", 1);
+  // Number of proxies in front of the API, from TRUST_PROXY (0 in local development)
+  app.set("trust proxy", getTrustProxy());
 
   // add 'api' before each routes
   app.setGlobalPrefix("api");

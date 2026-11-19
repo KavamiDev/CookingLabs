@@ -54,10 +54,12 @@ pnpm dev
 | `pnpm build`                       | Construit les deux applications             |
 | `pnpm --filter backend db:migrate` | Applique les changements de `schema.prisma` |
 | `pnpm --filter backend db:studio`  | Ouvre la base dans le navigateur            |
-| cc                                 | Crée le compte de test                      |
+| `pnpm --filter backend db:seed`    | Crée les comptes de test (élève et admin)   |
+
+Comptes de test créés par le seed (mot de passe `azerty974`) : `test@cookinglabs.local` (élève) et `admin@cookinglabs.local` (admin).
 
 Avant chaque commit, Husky lance Biome sur les fichiers modifiés.
 
-Convention : le code et les commentaires sont en anglais, les textes affichés à l’utilisateur en français.
+Convention : le code et les commentaires sont en anglais, les textes affichés à l'utilisateur en français.
 
 L'API se construit en image Docker pour Railway ou Fly.io : `docker build -f apps/backend/Dockerfile .`

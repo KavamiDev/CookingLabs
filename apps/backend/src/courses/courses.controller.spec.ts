@@ -1,3 +1,4 @@
+import { JwtService } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
 import { PrismaService } from "../prisma/prisma.service.js";
 import { CoursesController } from "./courses.controller.js";
@@ -12,6 +13,8 @@ describe("CoursesController", () => {
       providers: [
         CoursesService,
         { provide: PrismaService, useValue: { course: { findMany: vi.fn() } } },
+        // Needed by AuthGuard on the admin routes
+        { provide: JwtService, useValue: new JwtService({ secret: "secret-de-test" }) },
       ],
     }).compile();
 

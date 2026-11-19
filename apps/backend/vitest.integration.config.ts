@@ -9,5 +9,7 @@ export default defineConfig({
     include: ["test/**/*.integration.spec.ts"],
     hookTimeout: 120_000,
     testTimeout: 30_000,
+    // The API refuses to start without JWT_SECRET (see src/config/env.ts)
+    env: { JWT_SECRET: "secret-de-test" },
   },
 });

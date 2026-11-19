@@ -1,30 +1,30 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import type { AuthenticatedRequest } from "../auth/auth.guard.js";
 import { Roles } from "./roles.decorator.js";
 
+// Use after AuthGuard: @UseGuards(AuthGuard, RolesGuard) then @Roles(["admin"])
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) {}
 
-  // Retrieve the label places on the route
   canActivate(context: ExecutionContext): boolean {
+    // Roles placed on the route (method first, then controller)
     const roles = this.reflector.getAllAndOverride(Roles, [
       context.getHandler(),
       context.getClass(),
     ]);
-
     if (!roles) {
       return true;
     }
 
-    // Return associated user with route
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const user = request.user; // set by AuthGuard
 
-    if (!roles.includes(user.role)) {
+    // No user (AuthGuard forgotten on the route) = 403, not a 500 crash
+    if (!user || !roles.includes(user.role)) {
       throw new ForbiddenException("Accès refusé : droits insuffisants");
     }
-
     return true;
   }
 }
