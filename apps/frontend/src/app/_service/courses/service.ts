@@ -1,4 +1,11 @@
-//service front poour courses
+// Front-end service for courses.
+//
+// Two ways to call the API, on purpose:
+// - Server Components (fetchCourses, fetchCourse) run on the Next server, where fetch
+//   needs an absolute URL: they call the NestJS API directly through API_URL.
+// - Client Components (create, update, delete, reorder) run in the browser and use the
+//   relative path /api/...: next.config.ts rewrites it to the API. Same origin, so no CORS
+//   and the session cookie is sent automatically.
 export interface Lesson {
   id: number;
   title: string;
@@ -15,35 +22,28 @@ export interface Course {
   lessons?: Lesson[];
 }
 
+// Same default as next.config.ts: the NestJS API runs on port 3001 in local development.
+const API_URL = process.env.API_URL ?? "http://localhost:3001";
+
+// Logs the API error on the Next server, then throws so the page can show an error state.
+async function throwApiError(response: Response, action: string): Promise<never> {
+  const errorBody = await response.text();
+  console.error(`API error [${response.status}] on ${response.url}:`, errorBody);
+  throw new Error(`Failed to ${action} (${response.status})`);
+}
+
 export async function fetchCourses(): Promise<Course[]> {
-  const baseUrl = process.env.API_URL || "http://localhost:3000";
-  const response = await fetch(`${baseUrl}/api/courses`, {
-    cache: "no-store",
-  });
+  const response = await fetch(`${API_URL}/api/courses`, { cache: "no-store" });
   if (!response.ok) {
-    const errorBody = await response.text();
-    console.error(
-      `❌ Erreur API [${response.status} ${response.statusText}] sur ${response.url}:`,
-      errorBody,
-    );
-    throw new Error(`Failed to fetch courses (${response.status})`);
+    await throwApiError(response, "fetch courses");
   }
   return response.json();
 }
 
 export async function fetchCourse(id: string): Promise<Course> {
-  const baseUrl = process.env.API_URL || "http://localhost:3000";
-
-  const response = await fetch(`${baseUrl}/api/courses/${id}`, {
-    cache: "no-store",
-  });
+  const response = await fetch(`${API_URL}/api/courses/${id}`, { cache: "no-store" });
   if (!response.ok) {
-    const errorBody = await response.text();
-    console.error(
-      `❌ Erreur API [${response.status} ${response.statusText}] sur ${response.url}:`,
-      errorBody,
-    );
-    throw new Error(`Failed to fetch courses (${response.status})`);
+    await throwApiError(response, "fetch course");
   }
   return response.json();
 }
