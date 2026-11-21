@@ -1,18 +1,19 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { LOGIN_PAGE } from "@/app/_service/auth/cookie";
+import { getCurrentUser } from "@/app/_service/auth/session";
 
+// localhost:3000 is the entry point: logged in → the courses, otherwise → the login page
 export default function Home() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-6 px-6 py-24">
-      <h1 className="font-heading text-4xl font-semibold tracking-tight">CookingLabs</h1>
-      <p className="text-lg text-muted-foreground">
-        La plateforme de formation. Connectez-vous pour retrouver vos cours.
-      </p>
-      <div>
-        <Button asChild size="lg">
-          <Link href="/cours"> Retrouver vos cours </Link>
-        </Button>
-      </div>
-    </main>
+    <Suspense fallback={null}>
+      <RedirectFromHome />
+    </Suspense>
   );
+}
+
+// Renders nothing: redirect() always sends the browser to another page
+async function RedirectFromHome(): Promise<null> {
+  const user = await getCurrentUser();
+  redirect(user ? "/cours" : LOGIN_PAGE);
 }

@@ -1,7 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-test("la page de cours affiche un cours", async ({ page }) => {
-  await page.goto("/cours");
-  await expect(page.getByRole("heading", { name: "Vos Cours" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Retour à l'accueil" })).toBeVisible();
-});
+// Without a session cookie, every page leads to the login page (proxy.ts)
+for (const path of ["/cours", "/cours/creer", "/cours/1"]) {
+  test(`a visitor who opens ${path} is sent to the login page`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page).toHaveURL("/connexion");
+    await expect(page.getByRole("heading", { name: "Bon retour en cuisine" })).toBeVisible();
+  });
+}

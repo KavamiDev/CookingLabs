@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { requireUser } from "@/app/_service/auth/session";
 import type { Course } from "@/app/_service/courses/service";
 import { fetchCourses } from "@/app/_service/courses/service";
 import { Button } from "@/components/ui/button";
@@ -16,22 +17,13 @@ export default function Courses() {
       >
         <CoursesList />
       </Suspense>
-      <div>
-        <Button asChild>
-          <Link href="/cours/creer">Créer un cours</Link>
-          {/* TODO: rename French URLs (/cours, /creer) to English */}
-        </Button>
-      </div>
-      <div className="flex justify-center">
-        <Button asChild size="lg">
-          <Link href="/">Retour à l'accueil</Link>
-        </Button>
-      </div>
     </main>
   );
 }
 
 async function CoursesList() {
+  const user = await requireUser();
+
   let courses: Course[] = [];
   try {
     courses = await fetchCourses();
@@ -39,16 +31,27 @@ async function CoursesList() {
     return <p className="text-red-600">Impossible de charger les cours</p>;
   }
   return (
-    <div>
-      {courses.map((course: Course) => (
-        <div key={course.id} className="border-b py-4">
-          <h2 className="font-semibold text-lg">
-            <Link href={`/cours/${course.id}`}>{course.title}</Link>
-          </h2>
-          <p className="text-muted-foreground">{course.description}</p>
-          <p className="text-sm text-muted-foreground">{course.category}</p>
+    <>
+      <div>
+        {courses.map((course: Course) => (
+          <div key={course.id} className="border-b py-4">
+            <h2 className="font-semibold text-lg">
+              <Link href={`/cours/${course.id}`}>{course.title}</Link>
+            </h2>
+            <p className="text-muted-foreground">{course.description}</p>
+            <p className="text-sm text-muted-foreground">{course.category}</p>
+          </div>
+        ))}
+      </div>
+      {/* Only admins can create a course */}
+      {user.role === "admin" && (
+        <div>
+          <Button asChild>
+            {/* TODO: rename French URLs (/cours, /creer) to English */}
+            <Link href="/cours/creer">Créer un cours</Link>
+          </Button>
         </div>
-      ))}
-    </div>
+      )}
+    </>
   );
 }
