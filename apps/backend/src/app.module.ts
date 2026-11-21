@@ -4,6 +4,7 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AuthModule } from "./auth/auth.module.js";
 import { CoursesModule } from "./courses/courses.module.js";
 import { HealthController } from "./health/health.controller.js";
+import { LessonsModule } from "./lessons/lessons.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
 
 @Module({
@@ -13,6 +14,7 @@ import { PrismaModule } from "./prisma/prisma.module.js";
     // Limite par défaut : 100 requêtes par minute et par IP. La connexion aura sa propre limite (@Throttle).
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     CoursesModule,
+    LessonsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
