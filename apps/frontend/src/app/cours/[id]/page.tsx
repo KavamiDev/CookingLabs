@@ -4,6 +4,7 @@ import { requireUser } from "@/app/_service/auth/session";
 import { fetchCourse } from "@/app/_service/courses/queries";
 import { Button } from "@/components/ui/button";
 import { EditCourse } from "./edit-course";
+import { ImportLessonForm } from "./import-lesson-form";
 import { LessonsList } from "./lessons-list";
 import { LessonsOrder } from "./lessons-order";
 
@@ -32,10 +33,16 @@ async function CourseDetails({ params }: { params: Promise<{ id: string }> }) {
       <h1 className="font-heading text-4xl font-semibold tracking-tight">{course.title}</h1>
       <p className="text-lg text-muted-foreground">{course.description}</p>
       <p className="text-sm text-muted-foreground">{course.category}</p>
-      {/* Admin: reorder the lessons and edit the course. Student: the list of lessons only */}
+      {/* Admin: reorder and import lessons, edit the course. Student: the list of lessons only */}
       {user.role === "admin" ? (
         <>
-          <LessonsOrder courseId={course.id} lessons={lessons} />
+          {/* key: LessonsOrder copies the lessons in its state, so restart it when they change */}
+          <LessonsOrder
+            key={lessons.map((lesson) => lesson.id).join("-")}
+            courseId={course.id}
+            lessons={lessons}
+          />
+          <ImportLessonForm courseId={course.id} />
           <EditCourse course={course} />
         </>
       ) : (

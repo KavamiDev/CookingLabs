@@ -133,6 +133,13 @@
 .lesson-content {
   @apply flex flex-col gap-4 leading-relaxed break-words;
 }
+/* Imported pages often wrap their content: keep the same spacing inside */
+.lesson-content :where(div, section, article, main) > * + * {
+  @apply mt-4;
+}
+.lesson-content h1 {
+  @apply font-heading text-3xl font-semibold;
+}
 .lesson-content h2 {
   @apply mt-4 font-heading text-2xl font-semibold;
 }
@@ -150,6 +157,9 @@
 }
 .lesson-content img {
   @apply h-auto max-w-full rounded-md;
+}
+.lesson-content iframe {
+  @apply aspect-video h-auto w-full rounded-md border-0;
 }
 .lesson-content pre {
   @apply overflow-x-auto rounded-md bg-muted p-4 text-sm;
