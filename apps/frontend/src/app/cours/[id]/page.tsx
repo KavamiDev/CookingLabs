@@ -39,7 +39,7 @@ async function CourseDetails({ params }: { params: Promise<{ id: string }> }) {
           <EditCourse course={course} />
         </>
       ) : (
-        <LessonsList lessons={lessons} />
+        <LessonsList courseId={course.id} lessons={lessons} />
       )}
     </div>
   );

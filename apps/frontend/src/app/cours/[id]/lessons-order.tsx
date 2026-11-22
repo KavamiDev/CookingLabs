@@ -1,6 +1,7 @@
 "use client";
 // List of lessons with ↑ ↓ buttons to change their order
 
+import Link from "next/link";
 import { useState } from "react";
 import type { Lesson } from "@/app/_service/courses/service";
 import { reorderLessons } from "@/app/_service/courses/service";
@@ -50,9 +51,12 @@ export function LessonsOrder({ courseId, lessons }: { courseId: number; lessons:
       <ol className="flex flex-col gap-2">
         {list.map((lesson, index) => (
           <li key={lesson.id} className="flex items-center gap-2">
-            <span className="flex-1">
+            <Link
+              href={`/cours/${courseId}/lecons/${lesson.id}`}
+              className="flex-1 hover:underline"
+            >
               {index + 1}. {lesson.title}
-            </span>
+            </Link>
             <Button variant="outline" size="sm" onClick={() => moveLesson(index, -1)}>
               ↑
             </Button>
