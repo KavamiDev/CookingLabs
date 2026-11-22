@@ -17,6 +17,7 @@ export class CoursesService {
       where: { id },
       include: {
         lessons: {
+          select: { id: true, title: true, position: true },
           orderBy: {
             position: "asc",
           },

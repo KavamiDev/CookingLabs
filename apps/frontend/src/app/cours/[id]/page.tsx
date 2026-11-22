@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_service/auth/session";
-import { fetchCourse } from "@/app/_service/courses/service";
+import { fetchCourse } from "@/app/_service/courses/queries";
 import { Button } from "@/components/ui/button";
 import { EditCourse } from "./edit-course";
 import { LessonsList } from "./lessons-list";
