@@ -1,8 +1,8 @@
 // Front-end service for courses.
 //
 // Two ways to call the API, on purpose:
-// - Server Components (fetchCourses, fetchCourse) run on the Next server, where fetch
-//   needs an absolute URL: they call the NestJS API directly through API_URL.
+// - Server Components read through queries.ts: fetch needs an absolute URL (API_URL) and
+//   the session cookie must be forwarded by hand.
 // - Client Components (create, update, delete, reorder) run in the browser and use the
 //   relative path /api/...: next.config.ts rewrites it to the API. Same origin, so no CORS
 //   and the session cookie is sent automatically.
@@ -30,22 +30,6 @@ export async function throwApiError(response: Response, action: string): Promise
   const errorBody = await response.text();
   console.error(`API error [${response.status}] on ${response.url}:`, errorBody);
   throw new Error(`Failed to ${action} (${response.status})`);
-}
-
-export async function fetchCourses(): Promise<Course[]> {
-  const response = await fetch(`${API_URL}/api/courses`, { cache: "no-store" });
-  if (!response.ok) {
-    await throwApiError(response, "fetch courses");
-  }
-  return response.json();
-}
-
-export async function fetchCourse(id: string): Promise<Course> {
-  const response = await fetch(`${API_URL}/api/courses/${id}`, { cache: "no-store" });
-  if (!response.ok) {
-    await throwApiError(response, "fetch course");
-  }
-  return response.json();
 }
 
 export async function createCourse(title: string, description: string): Promise<Course> {

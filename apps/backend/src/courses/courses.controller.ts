@@ -21,6 +21,8 @@ import { ReorderLessonsDto } from "./dto/lessons-ids.js";
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
+  // Any logged-in user: list and read the courses
+  @UseGuards(AuthGuard)
   @Get()
   findAll() {
     return this.coursesService.findAll();
@@ -40,6 +42,7 @@ export class CoursesController {
     return this.coursesService.update(id, updateCourseDto);
   }
 
+  @UseGuards(AuthGuard)
   @Get(":id")
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.coursesService.findOne(id);

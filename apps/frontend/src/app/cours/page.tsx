@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_service/auth/session";
+import { fetchCourses } from "@/app/_service/courses/queries";
 import type { Course } from "@/app/_service/courses/service";
-import { fetchCourses } from "@/app/_service/courses/service";
 import { Button } from "@/components/ui/button";
 
 export default function Courses() {

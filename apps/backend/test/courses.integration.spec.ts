@@ -11,7 +11,7 @@ const PASSWORD = "bonmotdepasse";
 const STUDENT_EMAIL = "eleve@test.local";
 const ADMIN_EMAIL = "admin@test.local";
 
-describe("Course management routes are admin only (real PostgreSQL database)", () => {
+describe("Courses need a login, managing them is admin only (real PostgreSQL database)", () => {
   let database: StartedPostgreSqlContainer;
   let app: INestApplication;
   let courseId: number;
@@ -49,7 +49,18 @@ describe("Course management routes are admin only (real PostgreSQL database)", (
         { email: ADMIN_EMAIL, passwordHash, activatedAt: new Date(), role: "admin" },
       ],
     });
-    const course = await prisma.course.create({ data: { title: "Cours existant" } });
+    const course = await prisma.course.create({
+      data: {
+        title: "Cours existant",
+        // Created out of order, to check that the API sorts them by position
+        lessons: {
+          create: [
+            { title: "Cuisson", htmlContent: "<p>Contenu 2</p>", position: 2 },
+            { title: "Pâte", htmlContent: "<p>Contenu 1</p>", position: 1 },
+          ],
+        },
+      },
+    });
     courseId = course.id;
     await prisma.$disconnect();
   });
@@ -66,8 +77,27 @@ describe("Course management routes are admin only (real PostgreSQL database)", (
     await database?.stop();
   });
 
-  it("lets a visitor read the courses", async () => {
-    await request(app.getHttpServer()).get("/api/courses").expect(200);
+  it("rejects a visitor with 401 when reading the courses", async () => {
+    const server = request(app.getHttpServer());
+    await server.get("/api/courses").expect(401);
+    await server.get(`/api/courses/${courseId}`).expect(401);
+  });
+
+  it("rejects a forged session cookie with 401", async () => {
+    const server = request(app.getHttpServer());
+    await server.get(`/api/courses/${courseId}`).set("Cookie", "access_token=forged").expect(401);
+  });
+
+  it.each([STUDENT_EMAIL, ADMIN_EMAIL])("lets %s read a course without its HTML", async (email) => {
+    const user = await loginAs(email);
+    await user.get("/api/courses").expect(200);
+
+    const response = await user.get(`/api/courses/${courseId}`).expect(200);
+    // toEqual fails on any extra field, such as htmlContent
+    expect(response.body.lessons).toEqual([
+      { id: expect.any(Number), title: "Pâte", position: 1 },
+      { id: expect.any(Number), title: "Cuisson", position: 2 },
+    ]);
   });
 
   it("rejects a visitor with 401 on every management route", async () => {
