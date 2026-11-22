@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service.js";
 import { sanitizeLessonHtml } from "./sanitize-lesson-html.js";
 
@@ -6,6 +6,34 @@ import { sanitizeLessonHtml } from "./sanitize-lesson-html.js";
 @Injectable()
 export class LessonsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  // Saves the cleaned HTML as the last lesson of the course
+  async importHtml(courseId: number, title: string, html: string) {
+    const htmlContent = sanitizeLessonHtml(html).trim();
+    if (htmlContent === "") {
+      throw new BadRequestException("Le fichier est vide après nettoyage");
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      // FOR UPDATE locks the course: two imports at the same time cannot get the same position
+      const courses = await tx.$queryRaw<{ id: number }[]>`
+        SELECT id FROM courses WHERE id = ${courseId} FOR UPDATE`;
+      if (courses.length === 0) {
+        throw new NotFoundException("Cours introuvable");
+      }
+
+      const lastLesson = await tx.lesson.findFirst({
+        where: { courseId },
+        orderBy: { position: "desc" },
+        select: { position: true },
+      });
+
+      return tx.lesson.create({
+        data: { courseId, title, htmlContent, position: (lastLesson?.position ?? 0) + 1 },
+        select: { id: true, title: true, position: true },
+      });
+    });
+  }
 
   // One lesson of a course, with its cleaned HTML and the previous / next lessons for navigation
   async findOne(courseId: number, lessonId: number) {

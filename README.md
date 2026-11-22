@@ -50,7 +50,7 @@ pnpm dev
 | `pnpm typecheck`                   | Vérifie les types                           |
 | `pnpm test`                        | Tests unitaires                             |
 | `pnpm test:integration`            | Tests avec une vraie base (Docker requis)   |
-| `pnpm test:e2e`                    | Tests Playwright dans un navigateur         |
+| `pnpm test:e2e`                    | Tests Playwright (Docker requis)            |
 | `pnpm build`                       | Construit les deux applications             |
 | `pnpm --filter backend db:migrate` | Applique les changements de `schema.prisma` |
 | `pnpm --filter backend db:studio`  | Ouvre la base dans le navigateur            |
