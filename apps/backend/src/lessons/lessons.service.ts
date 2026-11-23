@@ -1,11 +1,16 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import type { JwtPayload } from "../auth/auth.guard.js";
+import { CourseAccessService } from "../courses/course-access.service.js";
 import { PrismaService } from "../prisma/prisma.service.js";
 import { sanitizeLessonHtml } from "./sanitize-lesson-html.js";
 
 // Business logic for lessons: the controller only receives the request and calls this service
 @Injectable()
 export class LessonsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly courseAccess: CourseAccessService,
+  ) {}
 
   // Saves the cleaned HTML as the last lesson of the course
   async importHtml(courseId: number, title: string, html: string) {
@@ -35,8 +40,11 @@ export class LessonsService {
     });
   }
 
-  // One lesson of a course, with its cleaned HTML and the previous / next lessons for navigation
-  async findOne(courseId: number, lessonId: number) {
+  // One lesson of a course, with its cleaned HTML and the previous / next lessons for navigation.
+  // Same access rule as the course: 403 for a student when the course is not open to their groups.
+  async findOne(user: JwtPayload, courseId: number, lessonId: number) {
+    await this.courseAccess.checkCanRead(user, courseId);
+
     const lesson = await this.prisma.lesson.findFirst({
       where: { id: lessonId, courseId },
       include: { course: { select: { id: true, title: true } } },

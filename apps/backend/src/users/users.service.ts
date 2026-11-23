@@ -10,4 +10,13 @@ export class UsersService {
   async user(where: Prisma.UserWhereUniqueInput): Promise<User | null> {
     return this.prisma.user.findUnique({ where });
   }
+
+  // Every student, without sensitive fields (no passwordHash, no inviteToken)
+  findStudents() {
+    return this.prisma.user.findMany({
+      where: { role: "student" },
+      select: { id: true, email: true, firstName: true, lastName: true },
+      orderBy: { email: "asc" },
+    });
+  }
 }

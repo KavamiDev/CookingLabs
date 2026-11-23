@@ -15,6 +15,7 @@ describe("Courses need a login, managing them is admin only (real PostgreSQL dat
   let database: StartedPostgreSqlContainer;
   let app: INestApplication;
   let courseId: number;
+  let closedCourseId: number;
 
   async function createApp() {
     const { AppModule } = await import("../src/app.module.js");
@@ -62,6 +63,18 @@ describe("Courses need a login, managing them is admin only (real PostgreSQL dat
       },
     });
     courseId = course.id;
+
+    // The student's group opens the first course only
+    const student = await prisma.user.findUniqueOrThrow({ where: { email: STUDENT_EMAIL } });
+    await prisma.group.create({
+      data: {
+        name: "Promo 1",
+        members: { create: { userId: student.id } },
+        courses: { create: { courseId } },
+      },
+    });
+    const closedCourse = await prisma.course.create({ data: { title: "Cours d'un autre groupe" } });
+    closedCourseId = closedCourse.id;
     await prisma.$disconnect();
   });
 
@@ -98,6 +111,30 @@ describe("Courses need a login, managing them is admin only (real PostgreSQL dat
       { id: expect.any(Number), title: "Pâte", position: 1 },
       { id: expect.any(Number), title: "Cuisson", position: 2 },
     ]);
+  });
+
+  it("lists only the courses of the student's groups, and all of them for an admin", async () => {
+    const student = await loginAs(STUDENT_EMAIL);
+    const studentList = await student.get("/api/courses").expect(200);
+    expect(studentList.body.map((course: { id: number }) => course.id)).toEqual([courseId]);
+
+    const admin = await loginAs(ADMIN_EMAIL);
+    const adminList = await admin.get("/api/courses").expect(200);
+    expect(adminList.body.map((course: { id: number }) => course.id)).toEqual([
+      courseId,
+      closedCourseId,
+    ]);
+  });
+
+  it("refuses with 403 a course outside the student's groups, even an unknown one", async () => {
+    const student = await loginAs(STUDENT_EMAIL);
+    await student.get(`/api/courses/${closedCourseId}`).expect(403);
+    // Same answer for an id that does not exist: the student cannot list the course ids
+    await student.get("/api/courses/999999").expect(403);
+
+    const admin = await loginAs(ADMIN_EMAIL);
+    await admin.get(`/api/courses/${closedCourseId}`).expect(200);
+    await admin.get("/api/courses/999999").expect(404);
   });
 
   it("rejects a visitor with 401 on every management route", async () => {

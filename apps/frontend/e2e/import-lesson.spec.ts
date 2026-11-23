@@ -61,7 +61,17 @@ test("a <script> in an imported lesson is never executed", async ({ page, browse
 
   const created = await page.request.post("/api/courses", { data: { title: "Test import HTML" } });
   expect(created.status()).toBe(201);
-  const courseUrl = `/cours/${(await created.json()).id}`;
+  const courseId: number = (await created.json()).id;
+  const courseUrl = `/cours/${courseId}`;
+
+  // The test student reads the course through their group (created by the seed)
+  const groups: { id: number; name: string }[] = await (
+    await page.request.get("/api/groups")
+  ).json();
+  const testGroup = groups.find((group) => group.name === "Groupe de test");
+  expect(testGroup).toBeDefined();
+  const opened = await page.request.put(`/api/groups/${testGroup?.id}/courses/${courseId}`);
+  expect(opened.status()).toBe(204);
 
   try {
     await page.goto(courseUrl);

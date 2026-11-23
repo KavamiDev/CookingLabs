@@ -1,5 +1,7 @@
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import type { JwtPayload } from "../auth/auth.guard.js";
+import { CourseAccessService } from "../courses/course-access.service.js";
 import { PrismaService } from "../prisma/prisma.service.js";
 import { LessonsService } from "./lessons.service.js";
 
@@ -9,9 +11,13 @@ describe("LessonsService", () => {
   // Fake Prisma: each method is a vi.fn() so the real database is never touched
   const prismaMock = {
     lesson: { findFirst: vi.fn(), create: vi.fn() },
+    course: { count: vi.fn() }, // used by CourseAccessService
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
   };
+
+  const admin: JwtPayload = { sub: 1, email: "admin@test.local", role: "admin" };
+  const student: JwtPayload = { sub: 2, email: "eleve@test.local", role: "student" };
 
   const lesson = {
     id: 2,
@@ -26,7 +32,11 @@ describe("LessonsService", () => {
     // A transaction runs its callback with the same fake client
     prismaMock.$transaction.mockImplementation((callback) => callback(prismaMock));
     const module: TestingModule = await Test.createTestingModule({
-      providers: [LessonsService, { provide: PrismaService, useValue: prismaMock }],
+      providers: [
+        LessonsService,
+        CourseAccessService,
+        { provide: PrismaService, useValue: prismaMock },
+      ],
     }).compile();
     service = module.get<LessonsService>(LessonsService);
   });
@@ -37,7 +47,7 @@ describe("LessonsService", () => {
       .mockResolvedValueOnce({ id: 1, title: "Introduction" }) // previous
       .mockResolvedValueOnce({ id: 3, title: "La cuisson" }); // next
 
-    const result = await service.findOne(1, 2);
+    const result = await service.findOne(admin, 1, 2);
 
     expect(result.htmlContent).toBe("<p>Farine</p>");
     expect(result.previousLesson).toEqual({ id: 1, title: "Introduction" });
@@ -50,7 +60,7 @@ describe("LessonsService", () => {
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(null);
 
-    const result = await service.findOne(1, 2);
+    const result = await service.findOne(admin, 1, 2);
 
     expect(result.previousLesson).toBeNull();
     expect(result.nextLesson).toBeNull();
@@ -59,7 +69,24 @@ describe("LessonsService", () => {
   it("throws NotFoundException when the lesson is not in this course", async () => {
     prismaMock.lesson.findFirst.mockResolvedValueOnce(null);
 
-    await expect(service.findOne(99, 2)).rejects.toThrow(NotFoundException);
+    await expect(service.findOne(admin, 99, 2)).rejects.toThrow(NotFoundException);
+  });
+
+  it("lets a student whose group opens the course read the lesson", async () => {
+    prismaMock.course.count.mockResolvedValue(1);
+    prismaMock.lesson.findFirst.mockResolvedValueOnce(lesson);
+
+    const result = await service.findOne(student, 1, 2);
+
+    expect(result.title).toBe("La pâte");
+  });
+
+  it("refuses with 403 a student whose groups do not open the course", async () => {
+    prismaMock.course.count.mockResolvedValue(0);
+
+    await expect(service.findOne(student, 1, 2)).rejects.toThrow(ForbiddenException);
+    // The lesson is not even read
+    expect(prismaMock.lesson.findFirst).not.toHaveBeenCalled();
   });
 
   it("importHtml saves cleaned HTML after the last lesson", async () => {

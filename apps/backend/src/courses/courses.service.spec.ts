@@ -1,6 +1,8 @@
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import type { JwtPayload } from "../auth/auth.guard.js";
 import { PrismaService } from "../prisma/prisma.service.js";
+import { CourseAccessService } from "./course-access.service.js";
 import { CoursesService } from "./courses.service.js";
 
 describe("CoursesService", () => {
@@ -14,15 +16,22 @@ describe("CoursesService", () => {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      count: vi.fn(), // used by CourseAccessService
     },
   };
+
+  const student: JwtPayload = { sub: 2, email: "eleve@test.local", role: "student" };
 
   beforeEach(async () => {
     // Reset the fakes before each test
     vi.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CoursesService, { provide: PrismaService, useValue: prismaMock }],
+      providers: [
+        CoursesService,
+        CourseAccessService,
+        { provide: PrismaService, useValue: prismaMock },
+      ],
     }).compile();
 
     service = module.get<CoursesService>(CoursesService);
@@ -54,6 +63,24 @@ describe("CoursesService", () => {
     prismaMock.course.findUnique.mockResolvedValue(null);
 
     await expect(service.findOne(99)).rejects.toThrow(NotFoundException);
+  });
+
+  it("findAllFor ne demande à un élève que les cours de ses groupes", async () => {
+    prismaMock.course.findMany.mockResolvedValue([]);
+
+    await service.findAllFor(student);
+
+    expect(prismaMock.course.findMany).toHaveBeenCalledWith({
+      where: { groups: { some: { group: { members: { some: { userId: 2 } } } } } },
+      orderBy: { id: "asc" },
+    });
+  });
+
+  it("findOneFor doit renvoyer une 403 à un élève sans accès, sans lire le cours", async () => {
+    prismaMock.course.count.mockResolvedValue(0);
+
+    await expect(service.findOneFor(student, 1)).rejects.toThrow(ForbiddenException);
+    expect(prismaMock.course.findUnique).not.toHaveBeenCalled();
   });
 
   it("reorderLessons doit mettre à jour la position des leçons", async () => {
