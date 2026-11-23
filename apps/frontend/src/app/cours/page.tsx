@@ -32,6 +32,7 @@ async function CoursesList() {
   }
   return (
     <>
+      {courses.length === 0 && <EmptyCourses isAdmin={user.role === "admin"} />}
       <div>
         {courses.map((course: Course) => (
           <div key={course.id} className="border-b py-4">
@@ -53,5 +54,20 @@ async function CoursesList() {
         </div>
       )}
     </>
+  );
+}
+
+// No course to show: a student is not in any group yet, or their groups open no course
+function EmptyCourses({ isAdmin }: { isAdmin: boolean }) {
+  if (isAdmin) {
+    return <p className="text-muted-foreground">Aucun cours pour le moment.</p>;
+  }
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border p-4">
+      <p className="font-semibold">Aucun cours ne vous est encore ouvert.</p>
+      <p className="text-muted-foreground">
+        Les cours sont ouverts par groupe. Demandez à un administrateur de vous ajouter à un groupe.
+      </p>
+    </div>
   );
 }

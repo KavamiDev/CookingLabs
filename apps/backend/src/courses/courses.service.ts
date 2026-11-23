@@ -1,15 +1,30 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import type { JwtPayload } from "../auth/auth.guard.js";
 import { PrismaService } from "../prisma/prisma.service.js";
+import { CourseAccessService } from "./course-access.service.js";
 import { CreateCourseDto, UpdateCourseDto } from "./dto/courses-dto.js";
 import { ReorderLessonsDto } from "./dto/lessons-ids.js";
 
 // Business logic for courses: the controller only receives the request and calls this service
 @Injectable()
 export class CoursesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly courseAccess: CourseAccessService,
+  ) {}
 
-  findAll() {
-    return this.prisma.course.findMany();
+  // Only the courses this user can read (all of them for an admin)
+  findAllFor(user: JwtPayload) {
+    return this.prisma.course.findMany({
+      where: this.courseAccess.readableCourses(user),
+      orderBy: { id: "asc" },
+    });
+  }
+
+  // One course, after checking that this user can read it (403 otherwise)
+  async findOneFor(user: JwtPayload, id: number) {
+    await this.courseAccess.checkCanRead(user, id);
+    return this.findOne(id);
   }
 
   async findOne(id: number) {

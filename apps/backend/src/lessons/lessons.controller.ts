@@ -5,12 +5,13 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { AuthGuard } from "../auth/auth.guard.js";
+import { type AuthenticatedRequest, AuthGuard } from "../auth/auth.guard.js";
 import { Roles } from "../roles_guard/roles.decorator.js";
 import { RolesGuard } from "../roles_guard/roles.guard.js";
 import { ImportLessonDto } from "./dto/import-lesson.dto.js";
@@ -41,13 +42,14 @@ export class LessonsController {
     return this.lessonsService.importHtml(courseId, importLessonDto.title, readHtmlFile(file));
   }
 
-  // Logged-in users only (students and admins)
+  // Logged-in users who can read the course (see CourseAccessService)
   @UseGuards(AuthGuard)
   @Get(":lessonId")
   findOne(
     @Param("courseId", ParseIntPipe) courseId: number,
     @Param("lessonId", ParseIntPipe) lessonId: number,
+    @Req() request: AuthenticatedRequest,
   ) {
-    return this.lessonsService.findOne(courseId, lessonId);
+    return this.lessonsService.findOne(request.user, courseId, lessonId);
   }
 }

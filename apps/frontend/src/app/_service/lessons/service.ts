@@ -22,7 +22,11 @@ export interface LessonDetails {
   nextLesson: LessonLink | null;
 }
 
-export async function fetchLesson(courseId: string, lessonId: string): Promise<LessonDetails> {
+// null: the course is not open to the student's groups (403 from the API)
+export async function fetchLesson(
+  courseId: string,
+  lessonId: string,
+): Promise<LessonDetails | null> {
   // The Next server calls the API itself, so it must forward the browser's session cookie
   const cookieStore = await cookies();
   const response = await fetch(`${API_URL}/api/courses/${courseId}/lessons/${lessonId}`, {
@@ -33,6 +37,9 @@ export async function fetchLesson(courseId: string, lessonId: string): Promise<L
   // Not logged in: go to the login page
   if (response.status === 401) {
     redirect(LOGIN_PAGE);
+  }
+  if (response.status === 403) {
+    return null;
   }
   // Unknown lesson, or lesson of another course: show the 404 page
   if (response.status === 404) {

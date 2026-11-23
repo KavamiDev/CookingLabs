@@ -15,6 +15,8 @@ describe("GET /api/courses/:courseId/lessons/:lessonId (real PostgreSQL database
   let app: INestApplication;
   let courseId: number;
   let otherCourseId: number;
+  let closedCourseId: number;
+  let closedLessonId: number;
   let lessonIds: number[];
 
   async function createApp() {
@@ -46,7 +48,7 @@ describe("GET /api/courses/:courseId/lessons/:lessonId (real PostgreSQL database
     execSync("pnpm exec prisma migrate deploy", { env: process.env, stdio: "ignore" });
 
     const prisma = new PrismaService();
-    await prisma.user.create({
+    const student = await prisma.user.create({
       data: {
         email: STUDENT_EMAIL,
         passwordHash: await argon2.hash(PASSWORD),
@@ -74,6 +76,24 @@ describe("GET /api/courses/:courseId/lessons/:lessonId (real PostgreSQL database
 
     const otherCourse = await prisma.course.create({ data: { title: "Autre cours" } });
     otherCourseId = otherCourse.id;
+
+    // The student's group opens both courses, not the third one
+    await prisma.group.create({
+      data: {
+        name: "Promo 1",
+        members: { create: { userId: student.id } },
+        courses: { create: [{ courseId }, { courseId: otherCourseId }] },
+      },
+    });
+    const closedCourse = await prisma.course.create({
+      data: {
+        title: "Cours fermé",
+        lessons: { create: { title: "Secret", htmlContent: "<p>Secret</p>", position: 1 } },
+      },
+      include: { lessons: true },
+    });
+    closedCourseId = closedCourse.id;
+    closedLessonId = closedCourse.lessons[0].id;
     await prisma.$disconnect();
   });
 
@@ -121,5 +141,13 @@ describe("GET /api/courses/:courseId/lessons/:lessonId (real PostgreSQL database
     const student = await loginAsStudent();
 
     await student.get(`/api/courses/${otherCourseId}/lessons/${lessonIds[0]}`).expect(404);
+  });
+
+  it("refuses with 403 a lesson of a course outside the student's groups", async () => {
+    const student = await loginAsStudent();
+
+    const res = await student.get(`/api/courses/${closedCourseId}/lessons/${closedLessonId}`);
+    expect(res.status).toBe(403);
+    expect(res.text).not.toContain("Secret");
   });
 });

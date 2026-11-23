@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_service/auth/session";
 import { fetchLesson, type LessonLink } from "@/app/_service/lessons/service";
+import { CourseAccessDenied } from "@/components/course-access-denied";
 import { Button } from "@/components/ui/button";
 
 type LessonParams = Promise<{ id: string; lessonId: string }>;
@@ -20,6 +21,18 @@ async function LessonDetails({ params }: { params: LessonParams }) {
   await requireUser();
   const { id, lessonId } = await params;
   const lesson = await fetchLesson(id, lessonId);
+  if (!lesson) {
+    return (
+      <>
+        <CourseAccessDenied />
+        <div>
+          <Button asChild>
+            <Link href="/cours">Retour à la liste des cours</Link>
+          </Button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

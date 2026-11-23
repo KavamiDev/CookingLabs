@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_service/auth/session";
 import { fetchCourse } from "@/app/_service/courses/queries";
+import { CourseAccessDenied } from "@/components/course-access-denied";
 import { Button } from "@/components/ui/button";
 import { EditCourse } from "./edit-course";
 import { ImportLessonForm } from "./import-lesson-form";
@@ -27,6 +28,9 @@ async function CourseDetails({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   const { id } = await params;
   const course = await fetchCourse(id);
+  if (!course) {
+    return <CourseAccessDenied />;
+  }
   const lessons = course.lessons ?? [];
   return (
     <div className="flex flex-col gap-6">

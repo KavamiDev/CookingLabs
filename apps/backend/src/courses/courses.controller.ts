@@ -8,9 +8,10 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from "@nestjs/common";
-import { AuthGuard } from "../auth/auth.guard.js";
+import { type AuthenticatedRequest, AuthGuard } from "../auth/auth.guard.js";
 import { Roles } from "../roles_guard/roles.decorator.js";
 import { RolesGuard } from "../roles_guard/roles.guard.js";
 import { CoursesService } from "./courses.service.js";
@@ -21,11 +22,11 @@ import { ReorderLessonsDto } from "./dto/lessons-ids.js";
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
-  // Any logged-in user: list and read the courses
+  // Any logged-in user: a student only gets the courses of their groups
   @UseGuards(AuthGuard)
   @Get()
-  findAll() {
-    return this.coursesService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.coursesService.findAllFor(request.user);
   }
   // Admin only: create, update, reorder and delete
   @UseGuards(AuthGuard, RolesGuard)
@@ -42,10 +43,11 @@ export class CoursesController {
     return this.coursesService.update(id, updateCourseDto);
   }
 
+  // Any logged-in user: 403 for a student when the course is not open to their groups
   @UseGuards(AuthGuard)
   @Get(":id")
-  findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.coursesService.findOne(id);
+  findOne(@Param("id", ParseIntPipe) id: number, @Req() request: AuthenticatedRequest) {
+    return this.coursesService.findOneFor(request.user, id);
   }
 
   @UseGuards(AuthGuard, RolesGuard)
