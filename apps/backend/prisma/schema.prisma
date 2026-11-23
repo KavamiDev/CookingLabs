@@ -1,0 +1,240 @@
+// Schéma de la base CookingLabs (référence : schéma dbdiagram).
+// Après une modification : npx prisma migrate dev --name <ce-qui-change>
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  admin
+  student
+}
+
+enum QuestionType {
+  single
+  multiple
+}
+
+enum MediaType {
+  image
+  video
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  firstName       String?
+  lastName        String?
+  role            UserRole  @default(student)
+  passwordHash    String?
+  inviteToken     String?   @unique
+  inviteExpiresAt DateTime?
+  activatedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  groups         GroupMember[]
+  attempts       QuizAttempt[]
+  lessonProgress LessonProgress[]
+  notifications  Notification[]
+  certificates   Certificate[]
+
+  @@map("users")
+}
+
+model Group {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+
+  members   GroupMember[]
+  courses   CourseAccess[]
+  schedules LessonSchedule[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  groupId Int
+  userId  Int
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, userId])
+  @@map("group_members")
+}
+
+model Course {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  category    String?
+  createdAt   DateTime @default(now())
+
+  lessons      Lesson[]
+  groups       CourseAccess[]
+  certificates Certificate[]
+
+  @@map("courses")
+}
+
+model CourseAccess {
+  courseId Int
+  groupId  Int
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  group    Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, groupId])
+  @@map("course_access")
+}
+
+model Lesson {
+  id          Int       @id @default(autoincrement())
+  courseId    Int
+  title       String
+  htmlContent String
+  position    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  media         LessonMedia[]
+  schedules     LessonSchedule[]
+  quiz          Quiz?
+  progress      LessonProgress[]
+  notifications Notification[]
+
+  @@map("lessons")
+}
+
+model LessonMedia {
+  id        Int       @id @default(autoincrement())
+  lessonId  Int
+  type      MediaType
+  url       String
+  mimeType  String?
+  sizeBytes Int?
+  createdAt DateTime  @default(now())
+  lesson    Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_media")
+}
+
+model LessonSchedule {
+  lessonId    Int
+  groupId     Int
+  availableAt DateTime
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([lessonId, groupId])
+  @@map("lesson_schedules")
+}
+
+model Quiz {
+  id            Int     @id @default(autoincrement())
+  lessonId      Int     @unique
+  title         String?
+  passThreshold Int
+  maxAttempts   Int?
+  lesson        Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  questions Question[]
+  attempts  QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model Question {
+  id       Int          @id @default(autoincrement())
+  quizId   Int
+  text     String
+  type     QuestionType @default(single)
+  position Int?
+  quiz     Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  choices Choice[]
+
+  @@map("questions")
+}
+
+model Choice {
+  id         Int      @id @default(autoincrement())
+  questionId Int
+  text       String
+  isCorrect  Boolean  @default(false)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  answers AttemptAnswer[]
+
+  @@map("choices")
+}
+
+model QuizAttempt {
+  id          Int      @id @default(autoincrement())
+  quizId      Int
+  userId      Int
+  score       Int
+  passed      Boolean
+  submittedAt DateTime @default(now())
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  answers AttemptAnswer[]
+
+  @@map("quiz_attempts")
+}
+
+model AttemptAnswer {
+  attemptId Int
+  choiceId  Int
+  attempt   QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  choice    Choice      @relation(fields: [choiceId], references: [id], onDelete: Cascade)
+
+  @@id([attemptId, choiceId])
+  @@map("attempt_answers")
+}
+
+model LessonProgress {
+  userId   Int
+  lessonId Int
+  viewedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson   Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  lessonId  Int?
+  message   String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson    Lesson?   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Certificate {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  courseId Int
+  code     String   @unique
+  issuedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("certificates")
+}

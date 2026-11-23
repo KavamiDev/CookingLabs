@@ -1,0 +1,25 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.3/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": [
+      "**",
+      "!**/src/generated",
+      "!**/prisma/migrations",
+      "!**/next-env.d.ts",
+      "!pnpm-lock.yaml",
+      "!**/test-results",
+      "!**/playwright-report"
+    ]
+  },
+  "formatter": { "indentStyle": "space", "lineWidth": 100 },
+  "css": { "parser": { "tailwindDirectives": true } },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "javascript": { "parser": { "unsafeParameterDecoratorsEnabled": true } },
+  "overrides": [
+    {
+      "includes": ["apps/backend/**"],
+      "linter": { "rules": { "style": { "useImportType": "off" } } }
+    }
+  ]
+}
