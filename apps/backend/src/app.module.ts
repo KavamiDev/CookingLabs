@@ -7,6 +7,7 @@ import { GroupsModule } from "./groups/groups.module.js";
 import { HealthController } from "./health/health.controller.js";
 import { LessonsModule } from "./lessons/lessons.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
+import { QuizzesModule } from "./quizzes/quizzes.module.js";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { PrismaModule } from "./prisma/prisma.module.js";
     CoursesModule,
     LessonsModule,
     GroupsModule,
+    QuizzesModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

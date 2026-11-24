@@ -2,8 +2,11 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { requireUser } from "@/app/_service/auth/session";
 import { fetchLesson, type LessonLink } from "@/app/_service/lessons/service";
+import { fetchQuizWithAnswers } from "@/app/_service/quizzes/queries";
 import { CourseAccessDenied } from "@/components/course-access-denied";
 import { Button } from "@/components/ui/button";
+import { ImportQuizForm } from "./import-quiz-form";
+import { QuizPreview } from "./quiz-preview";
 
 type LessonParams = Promise<{ id: string; lessonId: string }>;
 
@@ -18,7 +21,7 @@ export default function LessonPage({ params }: { params: LessonParams }) {
 }
 
 async function LessonDetails({ params }: { params: LessonParams }) {
-  await requireUser();
+  const user = await requireUser();
   const { id, lessonId } = await params;
   const lesson = await fetchLesson(id, lessonId);
   if (!lesson) {
@@ -52,6 +55,8 @@ async function LessonDetails({ params }: { params: LessonParams }) {
         dangerouslySetInnerHTML={{ __html: lesson.htmlContent }}
       />
 
+      {user.role === "admin" && <AdminQuiz courseId={lesson.course.id} lessonId={lesson.id} />}
+
       <nav
         aria-label="Navigation entre les leçons"
         className="flex flex-col gap-3 border-t pt-6 sm:flex-row sm:justify-between"
@@ -68,6 +73,24 @@ async function LessonDetails({ params }: { params: LessonParams }) {
         />
       </nav>
     </>
+  );
+}
+
+// Quiz of the lesson for the admin: preview of the current quiz, and the import form
+async function AdminQuiz({ courseId, lessonId }: { courseId: number; lessonId: number }) {
+  const quiz = await fetchQuizWithAnswers(courseId, lessonId);
+  return (
+    <section aria-labelledby="quiz-heading" className="flex flex-col gap-4 border-t pt-6">
+      <h2 id="quiz-heading" className="font-semibold text-lg">
+        QCM de la leçon
+      </h2>
+      {quiz ? (
+        <QuizPreview quiz={quiz} />
+      ) : (
+        <p className="text-muted-foreground">Cette leçon n'a pas encore de QCM.</p>
+      )}
+      <ImportQuizForm courseId={courseId} lessonId={lessonId} hasQuiz={quiz !== null} />
+    </section>
   );
 }
 
