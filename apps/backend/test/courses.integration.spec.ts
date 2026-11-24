@@ -108,8 +108,8 @@ describe("Courses need a login, managing them is admin only (real PostgreSQL dat
     const response = await user.get(`/api/courses/${courseId}`).expect(200);
     // toEqual fails on any extra field, such as htmlContent
     expect(response.body.lessons).toEqual([
-      { id: expect.any(Number), title: "Pâte", position: 1 },
-      { id: expect.any(Number), title: "Cuisson", position: 2 },
+      { id: expect.any(Number), title: "Pâte", position: 1, completed: false },
+      { id: expect.any(Number), title: "Cuisson", position: 2, completed: false },
     ]);
   });
 

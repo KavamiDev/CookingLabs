@@ -67,6 +67,12 @@ export class LessonsService {
       select: { id: true, title: true },
     });
 
+    // Did this user already mark the lesson as completed?
+    const progress = await this.prisma.lessonProgress.findUnique({
+      where: { userId_lessonId: { userId: user.sub, lessonId } },
+      select: { lessonId: true },
+    });
+
     return {
       id: lesson.id,
       title: lesson.title,
@@ -75,6 +81,27 @@ export class LessonsService {
       course: lesson.course,
       previousLesson,
       nextLesson,
+      completed: progress !== null,
     };
+  }
+
+  // The student marks the lesson as completed. It cannot be undone.
+  async markCompleted(user: JwtPayload, courseId: number, lessonId: number) {
+    await this.courseAccess.checkCanRead(user, courseId);
+
+    const lesson = await this.prisma.lesson.findFirst({
+      where: { id: lessonId, courseId },
+      select: { id: true },
+    });
+    if (!lesson) {
+      throw new NotFoundException("Lesson not found");
+    }
+
+    // skipDuplicates (ON CONFLICT DO NOTHING): a double click, even two requests at the same
+    // time, still gives one row, and never an error
+    await this.prisma.lessonProgress.createMany({
+      data: { userId: user.sub, lessonId },
+      skipDuplicates: true,
+    });
   }
 }

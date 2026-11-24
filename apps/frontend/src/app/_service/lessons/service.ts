@@ -20,6 +20,8 @@ export interface LessonDetails {
   course: { id: number; title: string };
   previousLesson: LessonLink | null;
   nextLesson: LessonLink | null;
+  // Did the logged-in user already mark this lesson as completed?
+  completed: boolean;
 }
 
 // null: the course is not open to the student's groups (403 from the API)

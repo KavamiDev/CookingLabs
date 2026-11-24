@@ -12,6 +12,7 @@ describe("LessonsService", () => {
   const prismaMock = {
     lesson: { findFirst: vi.fn(), create: vi.fn() },
     course: { count: vi.fn() }, // used by CourseAccessService
+    lessonProgress: { findUnique: vi.fn(), createMany: vi.fn() },
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
   };
@@ -31,6 +32,8 @@ describe("LessonsService", () => {
     vi.clearAllMocks();
     // A transaction runs its callback with the same fake client
     prismaMock.$transaction.mockImplementation((callback) => callback(prismaMock));
+    // Like Prisma: null when the user has not completed the lesson
+    prismaMock.lessonProgress.findUnique.mockResolvedValue(null);
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LessonsService,
@@ -52,6 +55,20 @@ describe("LessonsService", () => {
     expect(result.htmlContent).toBe("<p>Farine</p>");
     expect(result.previousLesson).toEqual({ id: 1, title: "Introduction" });
     expect(result.nextLesson).toEqual({ id: 3, title: "La cuisson" });
+    expect(result.completed).toBe(false);
+  });
+
+  it("tells whether the user already completed the lesson", async () => {
+    prismaMock.lesson.findFirst.mockResolvedValueOnce(lesson);
+    prismaMock.lessonProgress.findUnique.mockResolvedValue({ lessonId: 2 });
+
+    const result = await service.findOne(admin, 1, 2);
+
+    expect(result.completed).toBe(true);
+    expect(prismaMock.lessonProgress.findUnique).toHaveBeenCalledWith({
+      where: { userId_lessonId: { userId: 1, lessonId: 2 } },
+      select: { lessonId: true },
+    });
   });
 
   it("returns null neighbours for a course with a single lesson", async () => {
@@ -87,6 +104,33 @@ describe("LessonsService", () => {
     await expect(service.findOne(student, 1, 2)).rejects.toThrow(ForbiddenException);
     // The lesson is not even read
     expect(prismaMock.lesson.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("markCompleted saves one progress row, and never a duplicate", async () => {
+    prismaMock.course.count.mockResolvedValue(1);
+    prismaMock.lesson.findFirst.mockResolvedValueOnce({ id: 2 });
+
+    await service.markCompleted(student, 1, 2);
+
+    expect(prismaMock.lessonProgress.createMany).toHaveBeenCalledWith({
+      data: { userId: 2, lessonId: 2 },
+      skipDuplicates: true,
+    });
+  });
+
+  it("markCompleted refuses with 403 a course outside the student's groups", async () => {
+    prismaMock.course.count.mockResolvedValue(0);
+
+    await expect(service.markCompleted(student, 1, 2)).rejects.toThrow(ForbiddenException);
+    expect(prismaMock.lessonProgress.createMany).not.toHaveBeenCalled();
+  });
+
+  it("markCompleted refuses with 404 a lesson of another course", async () => {
+    prismaMock.course.count.mockResolvedValue(1);
+    prismaMock.lesson.findFirst.mockResolvedValueOnce(null);
+
+    await expect(service.markCompleted(student, 1, 2)).rejects.toThrow(NotFoundException);
+    expect(prismaMock.lessonProgress.createMany).not.toHaveBeenCalled();
   });
 
   it("importHtml saves cleaned HTML after the last lesson", async () => {
