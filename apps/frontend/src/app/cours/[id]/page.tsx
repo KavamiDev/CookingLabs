@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { requireUser } from "@/app/_service/auth/session";
 import { fetchCourse } from "@/app/_service/courses/queries";
 import { CourseAccessDenied } from "@/components/course-access-denied";
+import { ProgressBar, ResumeButton } from "@/components/course-progress";
 import { Button } from "@/components/ui/button";
 import { EditCourse } from "./edit-course";
 import { ImportLessonForm } from "./import-lesson-form";
@@ -50,7 +51,11 @@ async function CourseDetails({ params }: { params: Promise<{ id: string }> }) {
           <EditCourse course={course} />
         </>
       ) : (
-        <LessonsList courseId={course.id} lessons={lessons} />
+        <>
+          <ProgressBar progress={course} courseTitle={course.title} />
+          <ResumeButton courseId={course.id} progress={course} />
+          <LessonsList courseId={course.id} lessons={lessons} />
+        </>
       )}
     </div>
   );

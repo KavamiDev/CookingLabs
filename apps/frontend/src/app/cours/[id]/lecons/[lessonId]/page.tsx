@@ -4,6 +4,7 @@ import { requireUser } from "@/app/_service/auth/session";
 import { fetchLesson, type LessonLink } from "@/app/_service/lessons/service";
 import { CourseAccessDenied } from "@/components/course-access-denied";
 import { Button } from "@/components/ui/button";
+import { CompleteLessonButton } from "./complete-lesson-button";
 
 type LessonParams = Promise<{ id: string; lessonId: string }>;
 
@@ -18,7 +19,7 @@ export default function LessonPage({ params }: { params: LessonParams }) {
 }
 
 async function LessonDetails({ params }: { params: LessonParams }) {
-  await requireUser();
+  const user = await requireUser();
   const { id, lessonId } = await params;
   const lesson = await fetchLesson(id, lessonId);
   if (!lesson) {
@@ -51,6 +52,15 @@ async function LessonDetails({ params }: { params: LessonParams }) {
         // biome-ignore lint/security/noDangerouslySetInnerHtml: HTML is sanitized by the API
         dangerouslySetInnerHTML={{ __html: lesson.htmlContent }}
       />
+
+      {/* Students mark the lesson as completed themselves (opening it is not enough) */}
+      {user.role === "student" && (
+        <CompleteLessonButton
+          courseId={lesson.course.id}
+          lessonId={lesson.id}
+          completed={lesson.completed}
+        />
+      )}
 
       <nav
         aria-label="Navigation entre les leçons"

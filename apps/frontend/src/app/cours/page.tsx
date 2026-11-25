@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { requireUser } from "@/app/_service/auth/session";
 import { fetchCourses } from "@/app/_service/courses/queries";
 import type { Course } from "@/app/_service/courses/service";
+import { ProgressBar, ResumeButton } from "@/components/course-progress";
 import { Button } from "@/components/ui/button";
 
 export default function Courses() {
@@ -41,6 +42,13 @@ async function CoursesList() {
             </h2>
             <p className="text-muted-foreground">{course.description}</p>
             <p className="text-sm text-muted-foreground">{course.category}</p>
+            {/* Progress is for students: an admin does not follow the courses */}
+            {user.role === "student" && (
+              <div className="mt-3 flex flex-col gap-3">
+                <ProgressBar progress={course} courseTitle={course.title} />
+                <ResumeButton courseId={course.id} progress={course} />
+              </div>
+            )}
           </div>
         ))}
       </div>

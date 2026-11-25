@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Req,
   UploadedFile,
   UseGuards,
@@ -51,5 +53,19 @@ export class LessonsController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.lessonsService.findOne(request.user, courseId, lessonId);
+  }
+
+  // Students only: marks the lesson as completed for the logged-in student.
+  // PUT: calling it twice is harmless. 204: nothing to return
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(["student"])
+  @Put(":lessonId/progress")
+  @HttpCode(204)
+  markCompleted(
+    @Param("courseId", ParseIntPipe) courseId: number,
+    @Param("lessonId", ParseIntPipe) lessonId: number,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.lessonsService.markCompleted(request.user, courseId, lessonId);
   }
 }
