@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Lesson } from "@/app/_service/courses/service";
 
-// Read-only list of the lessons of a course (students): each title opens the lesson
+// Read-only list of the lessons of a course (students): each title opens the lesson,
+// a check mark follows the lessons the student completed
 export function LessonsList({ courseId, lessons }: { courseId: number; lessons: Lesson[] }) {
   return (
     <div className="flex flex-col gap-4 border-t pt-6">
@@ -11,10 +12,15 @@ export function LessonsList({ courseId, lessons }: { courseId: number; lessons: 
       ) : (
         <ol className="flex flex-col gap-2">
           {lessons.map((lesson, index) => (
-            <li key={lesson.id}>
+            <li key={lesson.id} className="flex items-center gap-2">
               <Link href={`/cours/${courseId}/lecons/${lesson.id}`} className="hover:underline">
                 {index + 1}. {lesson.title}
               </Link>
+              {lesson.completed && (
+                <span className="text-sm text-green-700">
+                  <span aria-hidden="true">✓</span> Terminée
+                </span>
+              )}
             </li>
           ))}
         </ol>

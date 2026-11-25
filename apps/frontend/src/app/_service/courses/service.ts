@@ -10,9 +10,20 @@ export interface Lesson {
   id: number;
   title: string;
   position: number;
+  // Only in the course details: did the logged-in user mark this lesson as completed?
+  completed?: boolean;
 }
 
-export interface Course {
+// Progress of the logged-in user in a course, computed by the API
+export interface CourseProgress {
+  totalLessons: number;
+  completedLessons: number;
+  // First lesson not completed yet (null when the course is finished or has no lesson)
+  resumeLessonId: number | null;
+}
+
+// A course as GET /api/courses and GET /api/courses/:id return it, with the user's progress
+export interface Course extends CourseProgress {
   id: number;
   title: string;
   description: string;
@@ -32,7 +43,7 @@ export async function throwApiError(response: Response, action: string): Promise
   throw new Error(`Failed to ${action} (${response.status})`);
 }
 
-export async function createCourse(title: string, description: string): Promise<Course> {
+export async function createCourse(title: string, description: string): Promise<{ id: number }> {
   const response = await fetch("/api/courses", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
