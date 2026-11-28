@@ -8,6 +8,7 @@ import { HealthController } from "./health/health.controller.js";
 import { InvitationsModule } from "./invitations/invitations.module.js";
 import { LessonsModule } from "./lessons/lessons.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
+import { QuizzesModule } from "./quizzes/quizzes.module.js";
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PrismaModule } from "./prisma/prisma.module.js";
     CoursesModule,
     LessonsModule,
     GroupsModule,
+    QuizzesModule,
     InvitationsModule,
   ],
   controllers: [HealthController],

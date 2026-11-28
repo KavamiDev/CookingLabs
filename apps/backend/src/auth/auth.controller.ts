@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import type { Response } from "express";
+import { getLoginRateLimit } from "../config/env.js";
 import { AUTH_COOKIE, type AuthenticatedRequest, AuthGuard } from "./auth.guard.js";
 import { AuthService } from "./auth.service.js";
 import { LoginDto } from "./dto/login.dto.js";
@@ -12,7 +13,7 @@ export class AuthController {
 
   @Post("login")
   @HttpCode(200)
-  @Throttle({ default: { limit: 10, ttl: 60_000 } }) // 10 tentatives par ip
+  @Throttle({ default: { limit: () => getLoginRateLimit(), ttl: 60_000 } }) // 10 tentatives par IP (LOGIN_RATE_LIMIT)
   async login(@Body() body: LoginDto, @Res({ passthrough: true }) res: Response) {
     // Return acces token
     const { access_token } = await this.authService.login(body.email, body.password);

@@ -1,4 +1,10 @@
-import { getFrontendUrl, getJwtSecret, getMailConfig, getTrustProxy } from "./env.js";
+import {
+  getFrontendUrl,
+  getJwtSecret,
+  getLoginRateLimit,
+  getMailConfig,
+  getTrustProxy,
+} from "./env.js";
 
 describe("getJwtSecret", () => {
   it("returns the secret when it is set", () => {
@@ -49,5 +55,17 @@ describe("getMailConfig", () => {
       resendApiKey: "re_123",
       from: "École <a@b.fr>",
     });
+  });
+});
+
+describe("getLoginRateLimit", () => {
+  it("defaults to 10 attempts per minute", () => {
+    expect(getLoginRateLimit({})).toBe(10);
+  });
+
+  it("reads the limit, and throws on an invalid value", () => {
+    expect(getLoginRateLimit({ LOGIN_RATE_LIMIT: "1000" })).toBe(1000);
+    expect(() => getLoginRateLimit({ LOGIN_RATE_LIMIT: "0" })).toThrow("LOGIN_RATE_LIMIT");
+    expect(() => getLoginRateLimit({ LOGIN_RATE_LIMIT: "beaucoup" })).toThrow("LOGIN_RATE_LIMIT");
   });
 });

@@ -42,3 +42,14 @@ export function getMailConfig(env: NodeJS.ProcessEnv = process.env): {
     from: env.MAIL_FROM?.trim() || "CookingLabs <onboarding@resend.dev>",
   };
 }
+
+// Number of login (and invitation) attempts allowed per minute and per IP. 10 by default.
+// Only the end-to-end tests raise it: all their browsers share the same IP (localhost).
+export function getLoginRateLimit(env: NodeJS.ProcessEnv = process.env): number {
+  const value = env.LOGIN_RATE_LIMIT?.trim() || "10";
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new Error(`LOGIN_RATE_LIMIT must be a whole number >= 1, got "${value}"`);
+  }
+  return limit;
+}

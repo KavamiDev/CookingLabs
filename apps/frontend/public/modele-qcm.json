@@ -1,0 +1,33 @@
+{
+  "title": "Les bases de la pâte brisée",
+  "passThreshold": 70,
+  "questions": [
+    {
+      "text": "Quelle farine utilise-t-on pour une pâte brisée ?",
+      "type": "single",
+      "choices": [
+        { "text": "Farine T55", "isCorrect": true },
+        { "text": "Farine de seigle T170", "isCorrect": false },
+        { "text": "Fécule de pomme de terre", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Quels ingrédients entrent dans une pâte brisée ?",
+      "type": "multiple",
+      "choices": [
+        { "text": "Farine", "isCorrect": true },
+        { "text": "Beurre", "isCorrect": true },
+        { "text": "Levure boulangère", "isCorrect": false },
+        { "text": "Sel", "isCorrect": true }
+      ]
+    },
+    {
+      "text": "Pourquoi laisser reposer la pâte au frais avant de l'étaler ?",
+      "type": "single",
+      "choices": [
+        { "text": "Pour qu'elle lève", "isCorrect": false },
+        { "text": "Pour qu'elle se rétracte moins à la cuisson", "isCorrect": true }
+      ]
+    }
+  ]
+}

@@ -9,6 +9,8 @@ const env = {
   DATABASE_URL: database.getConnectionUri(),
   JWT_SECRET: "secret-de-test",
   PORT: "3001",
+  // All the test browsers log in from localhost: the limit of 10 logins per minute would block them
+  LOGIN_RATE_LIMIT: "1000",
 };
 
 execSync("node_modules/.bin/prisma migrate deploy", { env, stdio: "inherit" });
