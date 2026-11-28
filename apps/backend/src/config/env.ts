@@ -21,3 +21,24 @@ export function getTrustProxy(env: NodeJS.ProcessEnv = process.env): number {
   }
   return hops;
 }
+
+// Address of the website, used to build the links sent by e-mail (invitation).
+// http://localhost:3000 in local development.
+export function getFrontendUrl(env: NodeJS.ProcessEnv = process.env): string {
+  const url = env.FRONTEND_URL?.trim() || "http://localhost:3000";
+  // No trailing slash: the links are built as `${url}/activation?...`
+  return url.replace(/\/+$/, "");
+}
+
+// Settings to send e-mails with Resend (https://resend.com).
+// Without RESEND_API_KEY, the e-mails are not sent: their content is written in the console.
+export function getMailConfig(env: NodeJS.ProcessEnv = process.env): {
+  resendApiKey: string | null;
+  from: string;
+} {
+  return {
+    resendApiKey: env.RESEND_API_KEY?.trim() || null,
+    // Resend's test sender: works without a verified domain, but only towards your own address
+    from: env.MAIL_FROM?.trim() || "CookingLabs <onboarding@resend.dev>",
+  };
+}

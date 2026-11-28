@@ -1,4 +1,4 @@
-import { getJwtSecret, getTrustProxy } from "./env.js";
+import { getFrontendUrl, getJwtSecret, getMailConfig, getTrustProxy } from "./env.js";
 
 describe("getJwtSecret", () => {
   it("returns the secret when it is set", () => {
@@ -23,5 +23,31 @@ describe("getTrustProxy", () => {
   it("throws on an invalid value", () => {
     expect(() => getTrustProxy({ TRUST_PROXY: "yes" })).toThrow("TRUST_PROXY");
     expect(() => getTrustProxy({ TRUST_PROXY: "-1" })).toThrow("TRUST_PROXY");
+  });
+});
+
+describe("getFrontendUrl", () => {
+  it("defaults to the local website", () => {
+    expect(getFrontendUrl({})).toBe("http://localhost:3000");
+  });
+
+  it("removes the trailing slash", () => {
+    expect(getFrontendUrl({ FRONTEND_URL: "https://cookinglabs.fr/" })).toBe(
+      "https://cookinglabs.fr",
+    );
+  });
+});
+
+describe("getMailConfig", () => {
+  it("has no Resend key by default (the link is written in the console)", () => {
+    expect(getMailConfig({}).resendApiKey).toBeNull();
+    expect(getMailConfig({ RESEND_API_KEY: " " }).resendApiKey).toBeNull();
+  });
+
+  it("reads the key and the sender", () => {
+    expect(getMailConfig({ RESEND_API_KEY: "re_123", MAIL_FROM: "École <a@b.fr>" })).toEqual({
+      resendApiKey: "re_123",
+      from: "École <a@b.fr>",
+    });
   });
 });
