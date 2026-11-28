@@ -5,6 +5,7 @@ import { fetchLesson, type LessonLink } from "@/app/_service/lessons/service";
 import { fetchQuizWithAnswers } from "@/app/_service/quizzes/queries";
 import { CourseAccessDenied } from "@/components/course-access-denied";
 import { Button } from "@/components/ui/button";
+import { CompleteLessonButton } from "./complete-lesson-button";
 import { ImportQuizForm } from "./import-quiz-form";
 import { QuizPreview } from "./quiz-preview";
 
@@ -54,6 +55,15 @@ async function LessonDetails({ params }: { params: LessonParams }) {
         // biome-ignore lint/security/noDangerouslySetInnerHtml: HTML is sanitized by the API
         dangerouslySetInnerHTML={{ __html: lesson.htmlContent }}
       />
+
+      {/* Students mark the lesson as completed themselves (opening it is not enough) */}
+      {user.role === "student" && (
+        <CompleteLessonButton
+          courseId={lesson.course.id}
+          lessonId={lesson.id}
+          completed={lesson.completed}
+        />
+      )}
 
       {user.role === "admin" && <AdminQuiz courseId={lesson.course.id} lessonId={lesson.id} />}
 
