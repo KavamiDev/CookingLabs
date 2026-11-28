@@ -5,6 +5,7 @@ import { fetchGroups, fetchStudents } from "@/app/_service/groups/queries";
 import { AccessDenied } from "@/components/access-denied";
 import { CreateGroupForm } from "./create-group-form";
 import { GroupCard } from "./group-card";
+import { ImportStudentsForm } from "./import-students-form";
 
 export default function GroupsPage() {
   return (
@@ -39,6 +40,7 @@ async function AdminOnlyGroups() {
         </p>
       </div>
 
+      <ImportStudentsForm />
       <CreateGroupForm />
 
       {groups.length === 0 && <p className="text-muted-foreground">Aucun groupe pour le moment.</p>}
